@@ -1,4 +1,4 @@
-// This points the frontend at the live backend on Render.
-// Once you deploy the backend (see DEPLOYMENT_GUIDE.md Part 3), replace the
-// URL below with your real Render service URL.
-window.VHI_API_BASE = "https://YOUR-RENDER-SERVICE.onrender.com";
+// Victoria Harry Interiors — Configuration
+// Direct routing to the official email address (100% free, zero server fees)
+window.VHI_CONTACT_EMAIL = "forhispurposeofficial@gmail.com";
+window.VHI_FORMSUBMIT_URL = "https://formsubmit.co/ajax/forhispurposeofficial@gmail.com";

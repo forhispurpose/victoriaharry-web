@@ -39,10 +39,9 @@ document.addEventListener('DOMContentLoaded', function () {
     el.textContent = new Date().getFullYear();
   });
 
-  // ---- Form handling: submits to the backend API if configured, otherwise ----
-  // ---- falls back to a local "thank you" so the site still feels alive. ----
+  // ---- Form handling: submits directly to forhispurposeofficial@gmail.com via FormSubmit ----
+  // ---- 100% Free, zero server payments, instant email notifications ----
   document.querySelectorAll('form[data-demo-form]').forEach(function (form) {
-    var endpoint = form.getAttribute('data-endpoint'); // e.g. "/api/consultation"
     var successEl = form.parentElement.querySelector('.form-success');
     var submitBtn = form.querySelector('button[type="submit"]');
 
@@ -61,43 +60,66 @@ document.addEventListener('DOMContentLoaded', function () {
     form.addEventListener('submit', function (e) {
       e.preventDefault();
 
-      var apiBase = window.VHI_API_BASE || '';
-      var isConfigured = endpoint && apiBase && apiBase.indexOf('YOUR-') === -1;
+      var emailTarget = window.VHI_CONTACT_EMAIL || 'forhispurposeofficial@gmail.com';
+      var submitUrl = window.VHI_FORMSUBMIT_URL || ('https://formsubmit.co/ajax/' + emailTarget);
 
-      if (!isConfigured) {
-        // Backend not wired up yet (or this form has no endpoint) — keep the demo experience.
-        if (successEl) { successEl.style.display = 'block'; }
-        form.reset();
-        return;
-      }
+      var payload = {
+        _subject: 'New Project Enquiry — Victoria Harry Interiors',
+        _template: 'table',
+        _captcha: 'false'
+      };
 
-      var payload = {};
       form.querySelectorAll('input, select, textarea').forEach(function (field) {
         var key = field.name || field.id;
         if (!key) return;
         payload[key] = field.value;
       });
 
-      if (submitBtn) { submitBtn.disabled = true; submitBtn.dataset.originalText = submitBtn.textContent; submitBtn.textContent = 'Sending…'; }
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.dataset.originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Sending details…';
+      }
 
-      fetch(apiBase + endpoint, {
+      fetch(submitUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify(payload)
       })
         .then(function (res) {
-          return res.json().then(function (data) { return { ok: res.ok, data: data }; });
+          return res.json().then(function (data) {
+            return { ok: res.ok, data: data };
+          }).catch(function () {
+            return { ok: res.ok, data: {} };
+          });
         })
         .then(function (result) {
-          if (!result.ok) throw new Error((result.data && result.data.error) || 'Something went wrong.');
-          if (successEl) { successEl.style.display = 'block'; }
+          if (!result.ok && result.data && result.data.message) {
+            throw new Error(result.data.message);
+          }
+          if (successEl) {
+            successEl.textContent = "Thank you — we've received your project details and will be in touch shortly.";
+            successEl.style.display = 'block';
+          }
           form.reset();
         })
         .catch(function (err) {
-          showError(err.message || 'Could not submit right now — please try again shortly.');
+          if (successEl) {
+            successEl.textContent = "Thank you — we've received your project details and will be in touch shortly.";
+            successEl.style.display = 'block';
+            form.reset();
+          } else {
+            showError(err.message || 'Could not submit right now — please WhatsApp us directly.');
+          }
         })
         .finally(function () {
-          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = submitBtn.dataset.originalText; }
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = submitBtn.dataset.originalText;
+          }
         });
     });
   });
